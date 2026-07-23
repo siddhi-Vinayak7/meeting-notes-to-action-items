@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://meeting-notes-backend-zrpk.onrender.com";
 
 // DOM Elements
 const notesInput = document.getElementById("notesInput");
