@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Notes to Action Items</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <h1 class="brand-title">Meeting Notes Processor</h1>
+    </div>
+    <div class="status-pill" id="statusPill">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Checking Backend...</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Pane: Input -->
+    <section class="pane">
+      <div class="pane-header">
+        <h2 class="pane-title">📝 Meeting Notes</h2>
+      </div>
+      <div class="pane-body">
+        <textarea 
+          id="notesInput" 
+          class="notes-textarea" 
+          placeholder="Paste raw, messy meeting notes here...&#10;&#10;Example:&#10;Met with Alex and Sarah regarding Q3 roadmap. Alex will set up database migrations by July 28. Sarah is going to mock up UI designs by July 30. We decided to use FastAPI for the backend."
+        ></textarea>
+        <div class="pane-footer">
+          <button id="processBtn" class="btn btn-primary">
+            <span class="btn-text">Process Notes</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Pane: Output -->
+    <section class="pane">
+      <div class="pane-header">
+        <h2 class="pane-title">📊 Processed Output</h2>
+        <button id="copyBtn" class="btn btn-secondary" disabled>
+          📋 Copy as text
+        </button>
+      </div>
+      <div class="pane-body" id="outputPaneBody">
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">💡</div>
+          <p>No processed notes yet. Enter your meeting notes on the left and click <strong>Process Notes</strong>.</p>
+        </div>
+
+        <!-- Output Sections (Hidden initially) -->
+        <div id="outputContent" style="display: none; display: flex; flex-direction: column; gap: 1.25rem;">
+          
+          <!-- Summary Section -->
+          <div class="output-section">
+            <h3 class="section-title">📌 Summary</h3>
+            <ul id="summaryList" class="output-list"></ul>
+          </div>
+
+          <!-- Decisions Section -->
+          <div class="output-section">
+            <h3 class="section-title">🎯 Key Decisions</h3>
+            <ul id="decisionsList" class="output-list"></ul>
+          </div>
+
+          <!-- Action Items Table Section -->
+          <div class="output-section">
+            <h3 class="section-title">✅ Action Items</h3>
+            <div class="table-wrapper">
+              <table id="actionTable" class="action-table">
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Owner</th>
+                    <th>Due Date</th>
+                  </tr>
+                </thead>
+                <tbody id="actionTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast">Copied output to clipboard!</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
