@@ -1,0 +1,9 @@
+notes from standup, kind of a mess today lol
+
+so rahul was talking about the server costs being higher than expected, we're paying like 40% more than budgeted on AWS. anyway after going back and forth we're just gonna switch the staging environment to a smaller instance, that should help. priya's doing that, she said she can get to it this week probably by friday
+
+oh also somewhere in the middle of all that vikram brought up that we should stop using the old logging library, everyone agreed, moving to structured logging going forward. no one owns this yet really
+
+meera mentioned the client meeting went well, they're happy with the demo. we're locked into the current scope, no changes there
+
+need to circle back on the hiring question next week, tabled for now

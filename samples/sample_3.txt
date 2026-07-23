@@ -1,0 +1,15 @@
+Product Review - March 3
+
+Discussion was mostly about the onboarding flow redesign. Team walked through the new Figma mockups, generally positive feedback.
+
+Some back and forth about whether to A/B test the new flow or just ship it. No firm decision, leaning towards shipping since timeline is tight.
+
+Went off on a tangent about competitor products for a while, not super relevant but noted that two competitors added similar features recently.
+
+Coming back to onboarding - Sanjay needs to update the mockups based on today's feedback, said he'd have it done by next Monday.
+
+Talked briefly about the Q2 roadmap, deferred to next meeting.
+
+One more thing - Ananya needs to write the analytics tracking spec for the new flow before dev starts, no specific date given but she said "soon."
+
+Wrapped up with a note that the design system docs are getting outdated and someone should update them eventually.

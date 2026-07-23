@@ -1,0 +1,13 @@
+Team sync - Feb 10
+
+Attendees: Priya, Rahul, Meera
+
+Priya gave an update on the payment integration - it's about 80% done, should be finished by Feb 14. Rahul will handle the QA testing for it once it's ready, targeting Feb 17.
+
+We decided to go with Stripe over Razorpay for the international payments piece, mainly because of better docs and support.
+
+Meera raised that the landing page copy still needs a final review. She'll send it to marketing by end of day Feb 11.
+
+Also decided: weekly syncs move to Tuesdays instead of Mondays starting next week.
+
+Next meeting: Feb 17.

@@ -1,0 +1,17 @@
+All-hands notes - March 20
+
+Started with a general company update from leadership, revenue is tracking okay for the quarter, nothing alarming.
+
+Long discussion about the office move - lease renewal is coming up, considering two options, no decision made, more info needed before next meeting.
+
+Engineering gave an update: the mobile app rewrite is progressing, currently at about 60%. Karan flagged a blocker around the auth library that's slowing things down, he's going to investigate alternatives and report back by March 25.
+
+Sales team talked about pipeline, a couple deals close to signing, nothing actionable from this for the rest of the team.
+
+Somewhere in here there was a tangent about lunch options in the new building, not important.
+
+Decision made: going forward, all-hands will be biweekly instead of weekly to save time.
+
+Support team raised that ticket volume is up 20%, they think it's related to the last release. Priya (support lead) will pull a report on ticket categories and share with engineering by March 22 so we can see if there's a pattern.
+
+Meeting ended without addressing the training budget topic that was on the original agenda - pushed to next time.
