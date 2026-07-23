@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "http://localhost:8000";
 
 // DOM Elements
 const notesInput = document.getElementById("notesInput");
@@ -8,6 +8,11 @@ const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 
 const emptyState = document.getElementById("emptyState");
+const skeletonLoader = document.getElementById("skeletonLoader");
+const errorBanner = document.getElementById("errorBanner");
+const errorIcon = document.getElementById("errorIcon");
+const errorMessage = document.getElementById("errorMessage");
+
 const outputContent = document.getElementById("outputContent");
 const summaryList = document.getElementById("summaryList");
 const decisionsList = document.getElementById("decisionsList");
@@ -37,13 +42,21 @@ async function checkBackendHealth() {
 async function handleProcessNotes() {
   const notesText = notesInput.value.trim();
   if (!notesText) {
-    alert("Please enter some meeting notes before processing.");
+    showInlineError("⚠️", "Meeting notes cannot be empty. Please enter your notes on the left.");
+    notesInput.focus();
     return;
   }
 
-  // Set Loading State
+  // Set Loading & Skeleton State
   processBtn.disabled = true;
   processBtn.innerHTML = `<div class="spinner"></div><span>Processing...</span>`;
+  copyBtn.disabled = true;
+  currentData = null;
+
+  emptyState.style.display = "none";
+  outputContent.style.display = "none";
+  errorBanner.style.display = "none";
+  skeletonLoader.style.display = "flex";
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/process-notes`, {
@@ -54,54 +67,113 @@ async function handleProcessNotes() {
       body: JSON.stringify({ notes: notesText }),
     });
 
+    skeletonLoader.style.display = "none";
+
+    if (response.status === 400) {
+      const errData = await response.json().catch(() => ({}));
+      const msg = errData.detail || "Meeting notes cannot be empty.";
+      showInlineError("⚠️", msg);
+      return;
+    }
+
     if (!response.ok) {
-      throw new Error(`Server returned ${response.status}`);
+      showInlineError("🤖", "Something went wrong reaching the AI service — please try again");
+      return;
     }
 
     const data = await response.json();
+
+    // Check for specific backend failure error codes
+    if (data.error === "model_output_invalid") {
+      showInlineError("🤔", "Couldn't understand these notes — try rephrasing");
+      return;
+    } else if (data.error === "api_call_failed") {
+      showInlineError("🔌", "Something went wrong reaching the AI service — please try again");
+      return;
+    } else if (data.error) {
+      showInlineError("⚠️", `Service error: ${data.error}`);
+      return;
+    }
+
+    // Success path
     currentData = data;
     renderResults(data);
+
   } catch (error) {
-    console.error("Error processing notes:", error);
-    alert(`Failed to process notes: ${error.message}. Make sure backend is running on ${API_BASE_URL}.`);
+    console.error("Network or execution error processing notes:", error);
+    skeletonLoader.style.display = "none";
+    showInlineError("🔌", "Something went wrong reaching the AI service — please try again");
   } finally {
     processBtn.disabled = false;
     processBtn.innerHTML = `<span class="btn-text">Process Notes</span>`;
   }
 }
 
+// Display Inline Error Message Banner
+function showInlineError(icon, message) {
+  emptyState.style.display = "none";
+  outputContent.style.display = "none";
+  skeletonLoader.style.display = "none";
+  
+  errorIcon.textContent = icon;
+  errorMessage.textContent = message;
+  errorBanner.style.display = "flex";
+}
+
 // Render Results to UI
 function renderResults(data) {
+  errorBanner.style.display = "none";
   emptyState.style.display = "none";
+  skeletonLoader.style.display = "none";
   outputContent.style.display = "flex";
 
   // Summary
   summaryList.innerHTML = "";
-  (data.summary || []).forEach(item => {
+  if (data.summary && data.summary.length > 0) {
+    data.summary.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      summaryList.appendChild(li);
+    });
+  } else {
     const li = document.createElement("li");
-    li.textContent = item;
+    li.textContent = "No summary points provided.";
+    li.style.color = "var(--text-muted)";
     summaryList.appendChild(li);
-  });
+  }
 
   // Decisions
   decisionsList.innerHTML = "";
-  (data.decisions || []).forEach(item => {
+  if (data.decisions && data.decisions.length > 0) {
+    data.decisions.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      decisionsList.appendChild(li);
+    });
+  } else {
     const li = document.createElement("li");
-    li.textContent = item;
+    li.textContent = "No explicit decisions made.";
+    li.style.color = "var(--text-muted)";
     decisionsList.appendChild(li);
-  });
+  }
 
   // Action Items Table
   actionTableBody.innerHTML = "";
-  (data.action_items || []).forEach(item => {
+  if (data.action_items && data.action_items.length > 0) {
+    data.action_items.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(item.task || "")}</td>
+        <td><span class="badge-owner">${escapeHtml(item.owner || "Unassigned")}</span></td>
+        <td><span class="badge-due">${escapeHtml(item.due || "Not specified")}</span></td>
+      `;
+      actionTableBody.appendChild(tr);
+    });
+  } else {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeHtml(item.task)}</td>
-      <td><span class="badge-owner">${escapeHtml(item.owner)}</span></td>
-      <td><span class="badge-due">${escapeHtml(item.due)}</span></td>
-    `;
+    tr.innerHTML = `<td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1rem;">No action items extracted.</td>`;
     actionTableBody.appendChild(tr);
-  });
+  }
 
   copyBtn.disabled = false;
 }
@@ -111,23 +183,35 @@ async function handleCopyAsText() {
   if (!currentData) return;
 
   let textBuffer = "=== SUMMARY ===\n";
-  (currentData.summary || []).forEach(item => {
-    textBuffer += `• ${item}\n`;
-  });
+  if (currentData.summary && currentData.summary.length > 0) {
+    currentData.summary.forEach(item => {
+      textBuffer += `• ${item}\n`;
+    });
+  } else {
+    textBuffer += "(No summary points)\n";
+  }
 
   textBuffer += "\n=== KEY DECISIONS ===\n";
-  (currentData.decisions || []).forEach(item => {
-    textBuffer += `• ${item}\n`;
-  });
+  if (currentData.decisions && currentData.decisions.length > 0) {
+    currentData.decisions.forEach(item => {
+      textBuffer += `• ${item}\n`;
+    });
+  } else {
+    textBuffer += "(No key decisions)\n";
+  }
 
   textBuffer += "\n=== ACTION ITEMS ===\n";
-  (currentData.action_items || []).forEach(item => {
-    textBuffer += `• Task: ${item.task} | Owner: ${item.owner} | Due: ${item.due}\n`;
-  });
+  if (currentData.action_items && currentData.action_items.length > 0) {
+    currentData.action_items.forEach(item => {
+      textBuffer += `• Task: ${item.task} | Owner: ${item.owner} | Due: ${item.due}\n`;
+    });
+  } else {
+    textBuffer += "(No action items)\n";
+  }
 
   try {
     await navigator.clipboard.writeText(textBuffer.trim());
-    showToast("Copied to clipboard!");
+    showToast("Copied output to clipboard!");
   } catch (err) {
     console.error("Clipboard copy failed:", err);
     alert("Could not copy to clipboard automatically.");

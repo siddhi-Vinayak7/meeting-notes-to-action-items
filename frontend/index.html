@@ -58,7 +58,33 @@
           <p>No processed notes yet. Enter your meeting notes on the left and click <strong>Process Notes</strong>.</p>
         </div>
 
-        <!-- Output Sections (Hidden initially) -->
+        <!-- Skeleton Loader (Pulsing placeholder blocks) -->
+        <div id="skeletonLoader" class="skeleton-loader" style="display: none;">
+          <div class="skeleton-card">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line medium"></div>
+          </div>
+        </div>
+
+        <!-- Inline Error Banner -->
+        <div id="errorBanner" class="error-banner" style="display: none;">
+          <div class="error-icon" id="errorIcon">⚠️</div>
+          <div class="error-text" id="errorMessage">An error occurred while processing notes.</div>
+        </div>
+
+        <!-- Output Sections -->
         <div id="outputContent" style="display: none; display: flex; flex-direction: column; gap: 1.25rem;">
           
           <!-- Summary Section -->
