@@ -93,3 +93,8 @@ All three returned valid, correctly-shaped JSON. The schema is robust to injecti
 - Both failure paths (API failure and bad model output) are proven to degrade gracefully — no crash, no HTTP 500, no frozen frontend
 - The frontend shows a loading skeleton during processing and a clear, distinguishable error banner on failure, verified by manually killing the backend mid-session and observing recovery after restart
 - Prompt injection attempts do not break the output schema
+## API Key Exposure Verification
+
+Screenshot confirming the Groq API key does not appear in any request sent from the deployed frontend — checked via browser DevTools Network tab (Request Headers and Response Headers) against the live `/api/process-notes` call:
+
+![API key not exposed](./docs/api-key-not-exposed.png)
