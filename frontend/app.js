@@ -20,23 +20,75 @@ const actionTableBody = document.getElementById("actionTableBody");
 const toast = document.getElementById("toast");
 
 let currentData = null;
+let healthIntervalId = null;
 
-// Health Check
-async function checkBackendHealth() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/health`);
-    if (res.ok) {
-      statusDot.classList.add("online");
-      statusText.textContent = "Backend Connected";
-    } else {
-      statusDot.classList.remove("online");
-      statusText.textContent = "Backend Offline";
-    }
-  } catch (err) {
+// Set indicator state
+function setIndicator(state) {
+  if (state === "online") {
+    statusDot.classList.add("online");
+    statusText.textContent = "Backend Connected";
+  } else if (state === "offline") {
     statusDot.classList.remove("online");
     statusText.textContent = "Backend Offline";
+  } else {
+    // neutral / checking
+    statusDot.classList.remove("online");
+    statusText.textContent = "Checking...";
   }
 }
+
+// Single health ping — returns true if healthy, false otherwise
+async function pingHealth() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(8000) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Initial check with retry for Render cold-start (up to 5 attempts, 5s apart)
+async function initialHealthCheck() {
+  const MAX_ATTEMPTS = 5;
+  const RETRY_DELAY_MS = 5000;
+
+  setIndicator("checking");
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const healthy = await pingHealth();
+    if (healthy) {
+      setIndicator("online");
+      return;
+    }
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+    }
+  }
+
+  setIndicator("offline");
+}
+
+// Silent background re-check (used by the 30s interval — doesn't flash "Checking...")
+async function silentHealthRecheck() {
+  const healthy = await pingHealth();
+  if (healthy) {
+    setIndicator("online");
+  } else {
+    setIndicator("offline");
+  }
+}
+
+// Start periodic background health polling every 30s
+function startHealthPolling() {
+  healthIntervalId = setInterval(silentHealthRecheck, 30000);
+}
+
+// Clean up interval when page is unloaded
+window.addEventListener("beforeunload", () => {
+  if (healthIntervalId !== null) {
+    clearInterval(healthIntervalId);
+  }
+});
 
 // Process Notes Handler
 async function handleProcessNotes() {
@@ -95,13 +147,16 @@ async function handleProcessNotes() {
       return;
     }
 
-    // Success path
+    // Success path — opportunistically mark backend as connected
+    setIndicator("online");
     currentData = data;
     renderResults(data);
 
   } catch (error) {
+    // Network/connection failure — mark backend as offline
     console.error("Network or execution error processing notes:", error);
     skeletonLoader.style.display = "none";
+    setIndicator("offline");
     showInlineError("🔌", "Something went wrong reaching the AI service — please try again");
   } finally {
     processBtn.disabled = false;
@@ -241,5 +296,5 @@ function escapeHtml(str) {
 processBtn.addEventListener("click", handleProcessNotes);
 copyBtn.addEventListener("click", handleCopyAsText);
 
-// Initial check
-checkBackendHealth();
+// Kick off initial check (with cold-start retries) then start background polling
+initialHealthCheck().then(startHealthPolling);
