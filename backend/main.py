@@ -86,6 +86,15 @@ def clean_and_parse_json(raw_text: str) -> Optional[dict]:
         pass
     return None
 
+    @app.get("/", tags=["Root"])
+def root():
+    return {
+        "message": "Meeting Notes to Action Items API is running.",
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 
 @app.get("/health")
 def health_check():
