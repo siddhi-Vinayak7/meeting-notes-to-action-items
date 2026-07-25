@@ -81,12 +81,14 @@ All three returned valid, correctly-shaped JSON. The schema is robust to injecti
 ## Known Limitations
 
 - **Render free-tier cold start**: the backend spins down after inactivity. The first request after idle time can take 30-60 seconds. This is a hosting constraint, not an app bug.
-- **Health indicator doesn't live-poll**: the "Backend Connected" badge in the frontend header is checked once and doesn't automatically detect if the backend goes down mid-session. It was confirmed that if the backend is stopped after page load, the badge still shows "Connected" even though requests will then fail (gracefully, with the correct error banner).
+- **Health indicator — fixed after initial testing**: an earlier version checked `/health` only once on page load, which could show a stale "Connected" status if the backend went down mid-session, or falsely show "Offline" if the backend was mid cold-start rather than genuinely down (real user feedback surfaced this). This was fixed: the indicator now shows a neutral "Checking..." state during startup, retries for up to ~70 seconds to fully cover Render's cold-start window before ever declaring "Offline," re-polls silently every 30 seconds in the background, and opportunistically flips to "Connected" the instant any real `/api/process-notes` request succeeds. Verified live: after a genuine 20-minute idle period (confirmed past Render's 15-minute spin-down threshold), a fresh page load correctly showed "Checking..." and resolved to "Backend Connected" without ever showing a false "Offline."
+- **Minor known edge case**: there is a small theoretical race condition where, if a real request succeeds and sets the badge to "Connected" while the initial cold-start retry loop is still mid-flight, a subsequent failed attempt from that same loop could momentarily overwrite it back. This is unlikely in practice (if the backend can serve a real API response, `/health` will typically also succeed) and wasn't observed during testing, but is noted here for completeness.
 - **Error labels don't fully distinguish sub-causes**: `api_call_failed` covers auth errors, network errors, and rate limits under one label. For this project's scope that's an acceptable simplification, but it means the frontend can't tell a user *which* specific infrastructure problem occurred, only that one did.
 - **Retry logic only helps with intermittent bad output**: it does not recover from a prompt or model that consistently fails to produce JSON, as shown in the broken-prompt test above.
 - **Interpretive judgment calls**: the model sometimes makes soft inferences (e.g., turning a "tabled" topic into an action item with a due date) that are reasonable but go slightly beyond pure extraction. This isn't hallucination in the sense of inventing facts not in the notes, but it's worth being aware of.
 
-## What Works Well
+## What Works Well 
+- The backend status indicator correctly distinguishes a genuinely cold/waking backend from a truly offline one, verified with a real 20-minute idle test against the live deployment
 
 - 5/5 samples produce valid, sensible structured output
 - Vague/ambiguous notes correctly fall back to `"Unassigned"` / `"Not specified"` rather than inventing details
