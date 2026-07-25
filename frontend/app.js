@@ -49,8 +49,8 @@ async function pingHealth() {
 
 // Initial check with retry for Render cold-start (up to 5 attempts, 5s apart)
 async function initialHealthCheck() {
-  const MAX_ATTEMPTS = 5;
-  const RETRY_DELAY_MS = 5000;
+  const MAX_ATTEMPTS = 10;
+  const RETRY_DELAY_MS = 7000;
 
   setIndicator("checking");
 
